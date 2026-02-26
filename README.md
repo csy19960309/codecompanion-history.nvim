@@ -129,6 +129,8 @@ require("codecompanion").setup({
                     refresh_every_n_prompts = 0, -- e.g., 3 to refresh after every 3rd user prompt
                     ---Maximum number of times to refresh the title (default: 3)
                     max_refreshes = 3,
+                    ---Language for generating titles (default: "English")
+                    language = "English", -- "Chinese", "Japanese", "Spanish", etc.
                     format_title = function(original_title)
                         -- this can be a custom function that applies some custom
                         -- formatting to the title.
