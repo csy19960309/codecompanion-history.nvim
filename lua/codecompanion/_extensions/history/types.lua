@@ -8,6 +8,7 @@
 ---@field refresh_every_n_prompts? number Number of user prompts after which to refresh the title (0 to disable)
 ---@field max_refreshes? number Maximum number of times to refresh the title (default: 3)
 ---@field format_title? fun(original_title: string):string a function that applies a custom transformation to the title.
+---@field language? string Language for title generation (default: "English")
 
 ---@class CodeCompanion.History.SummaryOpts
 ---@field create_summary_keymap? string | table Keymap to generate summary for current chat (default: "gcs")

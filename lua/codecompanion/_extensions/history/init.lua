@@ -69,6 +69,8 @@ local default_opts = {
         ---Maximum number of times to refresh the title (default: 3)
         max_refreshes = 3,
         format_title = nil,
+        ---Language for generating titles (default: "English")
+        language = "English",
     },
     ---Summary-related options
     summary = {
