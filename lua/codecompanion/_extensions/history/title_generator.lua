@@ -179,11 +179,12 @@ function TitleGenerator:generate(chat, callback, is_refresh)
 
     -- Create prompt for title generation
     local language = self.opts.title_generation_opts.language or "English"
+    local max_title_words = self.opts.title_generation_opts.max_title_words or 15
     local prompt
     if is_refresh then
         local original_title = chat.opts.title or "Unknown"
         prompt = string.format(
-            [[The conversation has evolved since the original title was generated. Based on the recent conversation below, generate a new concise title (max 5 words) that better reflects the current topic.
+            [[The conversation has evolved since the original title was generated. Based on the recent conversation below, generate a new concise title (max %d words) that better reflects the current topic.
 Respond in %s language.
 
 Original title: "%s"
@@ -194,13 +195,14 @@ Recent conversation:
 Generate a new title that captures the main topic of the recent conversation. Do not include any special characters or quotes. Your response should contain only the new title.
 
 New Title:]],
+            max_title_words,
             language,
             original_title,
             conversation_context
         )
     else
         prompt = string.format(
-            [[Generate a very short and concise title (max 5 words) for this chat based on the following conversation:
+            [[Generate a very short and concise title (max %d words) for this chat based on the following conversation:
 Respond in %s language.
 Do not include any special characters or quotes. Your response shouldn't contain any other text, just the title.
 
@@ -215,6 +217,7 @@ Examples:
 Conversation:
 %s
 Title:]],
+            max_title_words,
             language,
             conversation_context
         )

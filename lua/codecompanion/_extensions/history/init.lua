@@ -71,6 +71,8 @@ local default_opts = {
         format_title = nil,
         ---Language for generating titles (default: "English")
         language = "English",
+        ---Maximum number of words in the generated title (default: 15)
+        max_title_words = 15,
     },
     ---Summary-related options
     summary = {
