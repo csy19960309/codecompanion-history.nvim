@@ -3,6 +3,7 @@ local log = require("codecompanion._extensions.history.log")
 local utils = require("codecompanion._extensions.history.utils")
 
 ---@class CodeCompanion.History.UI
+---@field opts CodeCompanion.History.Opts
 ---@field storage CodeCompanion.History.Storage
 ---@field title_generator CodeCompanion.History.TitleGenerator
 ---@field default_buf_title string
@@ -19,6 +20,7 @@ function UI.new(opts, storage, title_generator)
         __index = UI,
     })
 
+    self.opts = opts
     self.storage = storage
     self.title_generator = title_generator
     self.default_buf_title = opts.default_buf_title
@@ -29,6 +31,20 @@ function UI.new(opts, storage, title_generator)
     return self --[[@as CodeCompanion.History.UI]]
 end
 
+---Format project path for display, abbreviating home directory
+---@param path string
+---@return string
+local function format_project_path(path)
+    if not path or path == "" then
+        return ""
+    end
+    local home = os.getenv("HOME")
+    if home and path:sub(1, #home) == home then
+        path = "~" .. path:sub(#home + 1)
+    end
+    return path
+end
+
 ---Update chat title with optional suffix
 ---@param chat CodeCompanion.History.Chat
 ---@param suffix? string Optional suffix to append to title
@@ -37,6 +53,15 @@ function UI:update_chat_title(chat, suffix, force)
     log:trace("Updating chat title for: %s", chat.opts.save_id or "N/A")
 
     local base_title = chat.opts.title or (self.default_buf_title .. tostring(chat.id))
+
+    -- Add project path if enabled
+    if self.opts.title_generation_opts and self.opts.title_generation_opts.show_project_path then
+        local project_root = chat.opts.project_root or chat.opts.cwd or ""
+        if project_root ~= "" then
+            local formatted_path = format_project_path(project_root)
+            base_title = string.format("📂 %s | %s", formatted_path, base_title)
+        end
+    end
 
     if suffix then
         local full_title = force and suffix or (base_title .. " " .. suffix)
@@ -169,8 +194,9 @@ end
 ---@param items_data table<string,CodeCompanion.History.ChatIndexData> | table<string,CodeCompanion.History.SummaryIndexData> Raw items from storage
 ---@param item_type "chat" | "summary"
 ---@param storage CodeCompanion.History.Storage Storage instance for getting summaries
+---@param opts CodeCompanion.History.Opts Plugin options
 ---@return CodeCompanion.History.EntryItem[] Formatted items
-local function format_items(items_data, item_type, storage)
+local function format_items(items_data, item_type, storage, opts)
     local items = {}
 
     if item_type == "chat" then
@@ -179,11 +205,22 @@ local function format_items(items_data, item_type, storage)
 
         for _, chat_item in pairs(items_data) do
             local save_id = chat_item.save_id
+            local display_name = chat_item.title or save_id
+
+            -- Add project path if enabled
+            if opts.title_generation_opts and opts.title_generation_opts.show_project_path then
+                local project_root = chat_item.project_root or chat_item.cwd or ""
+                if project_root ~= "" then
+                    local formatted_path = format_project_path(project_root)
+                    display_name = string.format("📂 %s | %s", formatted_path, display_name)
+                end
+            end
+
             table.insert(
                 items,
                 vim.tbl_extend("keep", {
                     save_id = save_id,
-                    name = chat_item.title or save_id,
+                    name = display_name,
                     title = chat_item.title or save_id,
                     updated_at = chat_item.updated_at or 0,
                     has_summary = summaries[save_id] ~= nil, -- Add summary flag
@@ -196,6 +233,18 @@ local function format_items(items_data, item_type, storage)
         end)
     elseif item_type == "summary" then
         for _, summary_item in pairs(items_data) do
+            local display_name = summary_item.chat_title or summary_item.summary_id
+
+            -- Add project path if enabled
+            if opts.title_generation_opts and opts.title_generation_opts.show_project_path then
+                local project_root = summary_item.project_root or ""
+                if project_root ~= "" then
+                    local formatted_path = format_project_path(project_root)
+                    display_name = string.format("📂 %s | %s", formatted_path, display_name)
+                end
+            end
+
+            summary_item.name = display_name
             table.insert(items, summary_item)
         end
         -- Sort items by generated_at in descending order
@@ -225,7 +274,7 @@ function UI:_open_items(item_type, items_data, handlers, current_item_id)
     end
 
     -- Format the items for display
-    local items = format_items(items_data, item_type, self.storage)
+    local items = format_items(items_data, item_type, self.storage, self.opts)
     log:trace("Loaded %d %s", #items, item_name)
 
     -- Load the configured picker module

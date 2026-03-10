@@ -73,6 +73,8 @@ local default_opts = {
         language = "English",
         ---Maximum number of words in the generated title (default: 15)
         max_title_words = 15,
+        ---Show project path at the beginning of the title (default: false)
+        show_project_path = false,
     },
     ---Summary-related options
     summary = {

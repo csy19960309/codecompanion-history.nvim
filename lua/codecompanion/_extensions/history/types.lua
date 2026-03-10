@@ -10,6 +10,7 @@
 ---@field format_title? fun(original_title: string):string a function that applies a custom transformation to the title.
 ---@field language? string Language for title generation (default: "English")
 ---@field max_title_words? number Maximum number of words in the generated title (default: 15)
+---@field show_project_path? boolean Show project path at the beginning of the title (default: false)
 
 ---@class CodeCompanion.History.SummaryOpts
 ---@field create_summary_keymap? string | table Keymap to generate summary for current chat (default: "gcs")
